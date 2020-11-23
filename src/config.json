@@ -1,0 +1,9 @@
+{
+    "api": {
+        "milkyway": {
+            "host": "http://localhost:3000",
+            "version": "v1"
+        }
+    }
+    
+}
