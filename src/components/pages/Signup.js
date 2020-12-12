@@ -26,7 +26,7 @@ class Signup extends Form {
     lastName: Joi.string().required().label("Last Name"),
     phoneNumber: Joi.number().required().label("Phone Number"),
     email: Joi.any().optional(),
-    password: Joi.string().required().label("Password"),
+    password: Joi.string().required().min(8).label("Password"),
     userType: Joi.string().required().label("Account Type"),
   };
 
@@ -35,6 +35,13 @@ class Signup extends Form {
       let response = await register(this.state.data);
       if (response.status === 201 || response.status === 200) {
         toast.success(response.data.message);
+        const {otpToken, phoneNumber} = response.data.data;
+
+        const data = JSON.stringify({ actionAfterOTP: Constants.SIGN_IN, url: "/sign-in", phoneNumber: phoneNumber, token: otpToken, actionType: "activate_account" });
+        window.localStorage.setItem(Constants.AFTER_OTP_DATA, data);
+        console.log(data)
+
+        this.props.history.push("/otp/verify");
       }
     } catch (error) {
       if(!error.response) {
@@ -59,7 +66,6 @@ class Signup extends Form {
           }
         }
       }
-
     }
   };
 
@@ -69,7 +75,7 @@ class Signup extends Form {
         <ToastContainer />
         <div className="back-to-home rounded d-none d-sm-block">
           <Link to="/" className="btn btn-icon btn-soft-primary">
-            <i data-feather="home" className="uil uil-home"></i>
+            <i data-feather="home" className="uil uil-home" />
           </Link>
         </div>
 

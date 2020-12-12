@@ -2,6 +2,10 @@ import { Fragment } from "react";
 import { Link } from "react-router-dom";
 import Form from "../common/form";
 import Joi from "joi-browser";
+import {signin} from "../../services/authService";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Constants from "../../constants/Constants";
 
 class Signin extends Form {
   state = {
@@ -17,9 +21,49 @@ class Signin extends Form {
     password: Joi.string().required().label("Password"),
   };
 
-  doSubmit = () => {
-    // Call server
-    console.log("Submitted");
+  doSubmit = async () => {
+    const {phoneNumber, password} = this.state.data;
+    try {
+      let response = await signin({phoneNumber, password});
+
+      console.log(response)
+    } catch(error) {
+      if(!error.response) {
+        toast.error(Constants.NETWORK_ERROR_MESSAGE);
+      }
+
+      if(error.response) {
+        const { data, status } = error.response;
+
+        if (status === 500 || status === 400) {
+          toast.error("Something went wrong. Please, contact support");
+        }
+
+        if(status === 422) {
+          toast.error("Please check the fields for error(s)");
+          const errs = {};
+
+          if(data.data.errors) {
+            for (let item of data.data.errors) errs[item.param] = item.msg;
+            this.setState({errors: errs || {}});
+            for (let item of data.data) errs[item.param] = item.msg;
+            this.setState({errors: errs || {}})
+          }
+        }
+
+        if(status === 404) {
+          toast.error(data.data[0].msg);
+        }
+
+        if(status === 401) {
+          toast.error(data.message);
+
+          setTimeout(() => {
+            this.props.history.push(`/otp/verify?token_id=${data.tokenId}&phone_number=${data.phoneNumber}`)
+          }, 5000);
+        }
+      }
+    }
   };
 
   render() {
@@ -30,6 +74,7 @@ class Signin extends Form {
             <i data-feather="home" className="uil uil-home"></i>
           </Link>
         </div>
+        <ToastContainer />
 
         <section className="bg-home d-flex align-items-center">
           <div className="container">
@@ -47,7 +92,7 @@ class Signin extends Form {
                 <div className="card login-page bg-white shadow rounded border-0">
                   <div className="card-body">
                     <h4 className="card-title text-center">Login</h4>
-                    <form className="login-form mt-4">
+                    <form className="login-form mt-4" onSubmit={this.handleSubmit}>
                       <div className="row">
                         <div className="col-lg-12">
                           {this.renderInput(

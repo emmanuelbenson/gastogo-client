@@ -1,7 +1,8 @@
 {
     "api": {
         "milkyway": {
-            "host": "http://localhost:3000",
+            "localhost": "http://localhost:5000",
+            "remotehost": "http://167.99.236.194",
             "version": "v1"
         }
     }
